@@ -1,4 +1,4 @@
-import database01 as db
+import Database as db
 
 names = db.get_names()
 user_ids = db.get_user_ids()
