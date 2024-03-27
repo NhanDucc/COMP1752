@@ -5,6 +5,7 @@ from PIL import Image, ImageTk          # Import the Image and ImageTk modules f
 import os                               # Import the os module for interacting with the operating system
 import font_manager as fonts            # Import the font_manager module for managing fonts
 import video_library as lib             # Import the video_library module
+import csv                              # Import the csv module for reading and writing CSV files
 
 playlists = []  # Create an empty list to store the videos
 
@@ -14,7 +15,7 @@ def set_text(text_area, content):       # Function to set the text of a text are
 class CheckVideos():                    # Create the CheckVideos class
     def __init__(self, window):         # Constructor method
         self.window = window            # Store the window in an instance variable
-
+        
         list_videos_btn = tk.Button(window, text="List All Videos", command=self.list_videos_clicked)   # Create "List All Videos" button and assign the list_videos_clicked function to it
         list_videos_btn.grid(row=0, column=0, padx=10, pady=10)                                         # Place "List All Videos" button widget in the window
 
@@ -55,6 +56,15 @@ class CheckVideos():                    # Create the CheckVideos class
         else:                                                       # If the image path does not exist
             self.image_label.configure(image=None)                  # Clear the label widget
 
+    def update_csv(self, filename):                                                                                                     # Method to update the CSV file
+        with open(filename, 'w', newline='') as csvfile:                                                                                # Open the CSV file in write mode
+            fieldnames = ['Name', 'Director', 'Rating', 'Play Count']                                                                   # Create a list of field names
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)                                                                     # Create a DictWriter object
+            writer.writeheader()                                                                                                        # Write the header row
+            for key in lib.library:                                                                                                     # For each key in the library
+                item = lib.library[key]                                                                                                 # Get the item from the library
+                writer.writerow({'Name': item.name, 'Director': item.director, 'Rating': item.rating, 'Play Count': item.play_count})   # Write the row to the CSV file
+    
     def check_video_clicked(self):                                                                          # Method to handle the "Check Video" button click event
         name = self.name_combo_box.get()                                                                    # Get the selected video name
         if name == "":                                                                                      # If no video is selected
@@ -68,8 +78,9 @@ class CheckVideos():                    # Create the CheckVideos class
             self.video_txt.delete(1.0, tk.END)                                                              # Clear the text widget
             video_details = f"Name: {name}\nDirector: {director}\nRating: {rating}\nPlays: {play_count}"    # Create a string with the video details
             set_text(self.video_txt, video_details)                                                         # Set the text of the text widget
-        self.status_lbl.configure(text="Check Video button was clicked!")                                   # Update status label text
         self.display_image(key)                                                                             # Call the display_image method to display the image of the selected video
+        self.update_csv('video_library.csv')                                                                      # Update the CSV file
+        self.status_lbl.configure(text="Check Video button was clicked!")                                   # Update status label text
 
     def clean_clicked(self):                                            # Method to handle the "Clean" button click event
         self.name_combo_box.delete(0, tk.END)                           # Clear the combobox widget
@@ -81,6 +92,7 @@ class CheckVideos():                    # Create the CheckVideos class
     def list_videos_clicked(self):                                          # Method to handle the "List All Videos" button click event
         self.list_txt.delete(1.0, tk.END)                                   # Clear the text widget
         video_list = lib.list_all()                                         # Get the list of all videos
+        self.update_csv('video_library.csv')                                      # Update the CSV file
         set_text(self.list_txt, video_list)                                 # Set the text of the scrolled text widget
         self.status_lbl.configure(text="List Videos button was clicked!")   # Update status label text
 
@@ -116,7 +128,7 @@ class CreateVideos():                       # Create the CreateVideos class
         
         self.status_lbl = tk.Label(window, text="", font=("Helvetica", 10))                 # Create a label for status messages
         self.status_lbl.grid(row=3, column=0, columnspan=4, sticky="W", padx=10, pady=10)   # Place the label widget in the window
-    
+       
     def add_video_clicked(self):                                                        # Method to handle the "Add to Playlist" button click event
         name = self.name_combo_box.get()                                                # Get the selected video name
         if name == "":                                                                  # If no video is selected
@@ -160,6 +172,8 @@ class CreateVideos():                       # Create the CreateVideos class
         set_text(self.video_txt, f"This playlist has been removed!\n")                  # Display a message in the text widget 
         set_text(self.video_txt, f"Play count for this playlist has been reset!")       # Display a message in the text widget
         self.status_lbl.configure(text="Reset button was clicked!")                     # Update status label text
+
+
 
 class UpdateVideos():                   # Create the UpdateVideos class
     def __init__(self, window):         # Constructor method
@@ -264,7 +278,7 @@ class FilterVideos():                       # Create the FilterVideos class
         if director != "":                                                                                                                          # If no director is selected
             self.list_txt.delete(1.0, tk.END)                                                                                                       # Clear the scrolled text widget
             self.video_txt.delete(1.0, tk.END)                                                                                                      # Clear the text widget
-            video_details = f"Name: {lib.get_name(key)}\nDirector: {director}\nRating: {lib.get_rating(key)}\nPlays: {lib.get_play_count(key)}"     # Create a string with the video details
+            video_details = f"Name: {lib.get_name(key)}\nRating: {lib.get_rating(key)}\nPlays: {lib.get_play_count(key)}"     # Create a string with the video details
             set_text(self.list_txt, video_details)                                                                                                  # Display the video details in the text widget
             set_text(self.video_txt, f"{lib.get_name(key)} has been filtered!\n")                                                                   # Display a message in the text widget
         else:                                                                                                                                       # If a director is selected
@@ -314,6 +328,7 @@ spacer_3 = ttk.Frame(tab_control)               # Create a frame widget
 tab_control.add(spacer_3, text=" ")             # Add the frame widget to the tab control
 tab_control.tab(spacer_3, state='disabled')     # Disable the spacer tab
 
+# Fourth tab
 tab_4 = ttk.Frame(tab_control)                      # Create a frame widget
 tab_control.add(tab_4, text="Filter Videos")        # Add the frame widget to the tab control
 FilterVideos(tab_4)                                 # Create the FilterVideos object
